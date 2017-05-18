@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
-
+#user table
 class User(Base):
     __tablename__ = 'user'
 
@@ -14,7 +14,7 @@ class User(Base):
     email = Column(String(250), nullable=False)
     picture = Column(String(250))
 
-
+# Restaurant table
 class Restaurant(Base):
     __tablename__ = 'restaurant'
 
@@ -31,7 +31,7 @@ class Restaurant(Base):
             'id': self.id,
         }
 
-
+#MenuItem table
 class MenuItem(Base):
     __tablename__ = 'menu_item'
 

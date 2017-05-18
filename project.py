@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
-app = Flask(__name__)
+
 
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
@@ -15,6 +15,8 @@ import httplib2
 import json
 from flask import make_response
 import requests
+
+app = Flask(__name__)
 
 # Connect to Database and create database session
 engine = create_engine('sqlite:///restaurantmenuwithusers.db')
@@ -57,7 +59,7 @@ def showLogin():
     login_session['state'] = state
     return render_template("login.html", STATE=state)
 
-
+# gconnect
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
@@ -245,15 +247,19 @@ def editRestaurant(restaurant_id):
         return redirect("/login")
     editedRestaurant = session.query(
         Restaurant).filter_by(id=restaurant_id).one()
-    if request.method == 'POST':
-        if request.form['name']:
-            editedRestaurant.name = request.form['name']
-            flash('Restaurant Successfully Edited %s' % editedRestaurant.name)
-            return redirect(url_for('showRestaurants'))
+    if login_session['username'] != editedRestaurant.user_id:
+    	flash('edit your restaurant')
+        return redirect(url_for('showRestaurants'))
     else:
-        return render_template(
-            'editRestaurant.html',
-            restaurant=editedRestaurant)
+	    if request.method == 'POST':
+	        if request.form['name']:
+	            editedRestaurant.name = request.form['name']
+	            flash('Restaurant Successfully Edited %s' % editedRestaurant.name)
+	            return redirect(url_for('showRestaurants'))
+	    else:
+	        return render_template(
+	            'editRestaurant.html',
+	            restaurant=editedRestaurant)
 
 
 # Delete a restaurant
@@ -264,6 +270,9 @@ def deleteRestaurant(restaurant_id):
     else:
         restaurantToDelete = session.query(
             Restaurant).filter_by(id=restaurant_id).one()
+        if login_session['username'] != restaurantToDelete.user_id:
+    		flash('You can Delete only your restaurant')
+        	return redirect(url_for('showRestaurants'))
         if request.method == 'POST':
             session.delete(restaurantToDelete)
             flash('%s Successfully Deleted' % restaurantToDelete.name)
@@ -325,8 +334,6 @@ def newMenuItem(restaurant_id):
         return render_template('newmenuitem.html', restaurant_id=restaurant_id)
 
 # Edit a menu item
-
-
 @app.route(
     '/restaurant/<int:restaurant_id>/menu/<int:menu_id>/edit',
     methods=[
@@ -338,6 +345,9 @@ def editMenuItem(restaurant_id, menu_id):
         editedItem = session.query(MenuItem).filter_by(id=menu_id).one()
         restaurant = session.query(
             Restaurant).filter_by(id=restaurant_id).one()
+        if login_session['username'] != restaurant.user_id:
+    		flash('edit your restaurant Menu')
+        	return redirect(url_for('showRestaurants'))
         if request.method == 'POST':
             if request.form['name']:
                 editedItem.name = request.form['name']
@@ -372,6 +382,9 @@ def deleteMenuItem(restaurant_id, menu_id):
         restaurant = session.query(
             Restaurant).filter_by(id=restaurant_id).one()
         itemToDelete = session.query(MenuItem).filter_by(id=menu_id).one()
+        if login_session['username'] != restaurant.user_id:
+    		flash('edit your restaurant')
+        	return redirect(url_for('showRestaurants'))
         if request.method == 'POST':
             session.delete(itemToDelete)
             session.commit()
