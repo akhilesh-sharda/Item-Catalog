@@ -247,7 +247,7 @@ def editRestaurant(restaurant_id):
         return redirect("/login")
     editedRestaurant = session.query(
         Restaurant).filter_by(id=restaurant_id).one()
-    if login_session['username'] != editedRestaurant.user_id:
+    if login_session['user_id'] != editedRestaurant.user_id:
     	flash('edit your restaurant')
         return redirect(url_for('showRestaurants'))
     else:
@@ -270,7 +270,7 @@ def deleteRestaurant(restaurant_id):
     else:
         restaurantToDelete = session.query(
             Restaurant).filter_by(id=restaurant_id).one()
-        if login_session['username'] != restaurantToDelete.user_id:
+        if login_session['user_id'] != restaurantToDelete.user_id:
     		flash('You can Delete only your restaurant')
         	return redirect(url_for('showRestaurants'))
         if request.method == 'POST':
@@ -325,7 +325,8 @@ def newMenuItem(restaurant_id):
             description=request.form['description'],
             price=request.form['price'],
             course=request.form['course'],
-            restaurant_id=restaurant_id)
+            restaurant_id=restaurant_id,
+            user_id=restaurant.user_id)
         session.add(newItem)
         session.commit()
         flash('New Menu %s Item Successfully Created' % (newItem.name))
@@ -342,31 +343,31 @@ def newMenuItem(restaurant_id):
 def editMenuItem(restaurant_id, menu_id):
     if 'username' not in login_session:
         return redirect("/login")
-        editedItem = session.query(MenuItem).filter_by(id=menu_id).one()
-        restaurant = session.query(
-            Restaurant).filter_by(id=restaurant_id).one()
-        if login_session['username'] != restaurant.user_id:
-    		flash('edit your restaurant Menu')
-        	return redirect(url_for('showRestaurants'))
-        if request.method == 'POST':
-            if request.form['name']:
-                editedItem.name = request.form['name']
-            if request.form['description']:
-                editedItem.description = request.form['description']
-            if request.form['price']:
-                editedItem.price = request.form['price']
-            if request.form['course']:
-                editedItem.course = request.form['course']
-            session.add(editedItem)
-            session.commit()
-            flash('Menu Item Successfully Edited')
-            return redirect(url_for('showMenu', restaurant_id=restaurant_id))
-        else:
-            return render_template(
-                'editmenuitem.html',
-                restaurant_id=restaurant_id,
-                menu_id=menu_id,
-                item=editedItem)
+    editedItem = session.query(MenuItem).filter_by(id=menu_id).one()
+    restaurant = session.query(
+        Restaurant).filter_by(id=restaurant_id).one()
+    if login_session['user_id'] != restaurant.user_id:
+		flash('edit your restaurant Menu')
+		return redirect(url_for('showRestaurants'))
+    if request.method == 'POST':
+        if request.form['name']:
+            editedItem.name = request.form['name']
+        if request.form['description']:
+            editedItem.description = request.form['description']
+        if request.form['price']:
+            editedItem.price = request.form['price']
+        if request.form['course']:
+            editedItem.course = request.form['course']
+        session.add(editedItem)
+        session.commit()
+        flash('Menu Item Successfully Edited')
+        return redirect(url_for('showMenu', restaurant_id=restaurant_id))
+    else:
+        return render_template(
+            'editmenuitem.html',
+            restaurant_id=restaurant_id,
+            menu_id=menu_id,
+            item=editedItem)
 
 
 # Delete a menu item
@@ -382,7 +383,7 @@ def deleteMenuItem(restaurant_id, menu_id):
         restaurant = session.query(
             Restaurant).filter_by(id=restaurant_id).one()
         itemToDelete = session.query(MenuItem).filter_by(id=menu_id).one()
-        if login_session['username'] != restaurant.user_id:
+        if login_session['user_id'] != restaurant.user_id:
     		flash('edit your restaurant')
         	return redirect(url_for('showRestaurants'))
         if request.method == 'POST':
